@@ -371,8 +371,13 @@ module Gen(P : Params) = struct
       (List.map lib.install_c_headers ~f:(fun header ->
          Path.relative dir (header ^ ".h")));
 
-    List.iter Mode.all ~f:(fun mode ->
-      build_lib lib ~scope ~flags ~dir ~mode ~modules ~dep_graph);
+    let all_modes = if lib.modes.native then
+      Mode.all
+    else
+      List.filter Mode.all ~f:(function Mode.Native -> false | _ -> true)
+    in
+    List.iter all_modes ~f:(fun mode -> build_lib lib ~scope ~flags ~dir ~mode ~modules ~dep_graph);
+
     (* Build *.cma.js *)
     SC.add_rules sctx (
       let src = lib_archive lib ~dir ~ext:(Mode.compiled_lib_ext Mode.Byte) in
